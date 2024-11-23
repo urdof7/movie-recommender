@@ -13,10 +13,10 @@ Content-based filtering and collaborative filtering are two primary methods for 
 - **Average Number of Movies Rated per User**: Approximately **3.7 movies** per user in the dataset.
 
 - **Similarity Scores**: Content-based filtering produces similarity scores ranging from 0 to 1. These scores could be normalized to a 1–5 rating scale using the formula:
-    \[
-    \text{Normalized Rating} = 1 + (\text{Similarity Score} \times 4)
-    \]
-    This normalization provides a way to compare content-based recommendations directly with the predicted ratings from collaborative filtering.
+  
+  $$\text{Normalized Rating} = 1 + (\text{Similarity Score} \times 4)$$
+  
+  This normalization provides a way to compare content-based recommendations directly with the predicted ratings from collaborative filtering.
 
 - **Limitations of Content-Based Filtering**:
   - Content-based filtering requires users to have rated at least one movie with a score of **4.0 or higher** to generate recommendations.
