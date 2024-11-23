@@ -21,7 +21,26 @@ DROP TABLE IF EXISTS genre;
 DROP TABLE IF EXISTS country;
 DROP TABLE IF EXISTS language;
 
+-- Drop indexes if they exist
+DROP INDEX IF EXISTS idx_movie_title;
+DROP INDEX IF EXISTS idx_rating_user;
+DROP INDEX IF EXISTS idx_rating_movie;
+DROP INDEX IF EXISTS idx_movie_genre;
+DROP INDEX IF EXISTS idx_movie_director;
+DROP INDEX IF EXISTS idx_movie_release_date;
+DROP INDEX IF EXISTS idx_person_name;
+DROP INDEX IF EXISTS idx_movie_language;
+
+-- Drop views if they exist
+DROP VIEW IF EXISTS movies_and_genres;
+DROP VIEW IF EXISTS user_activity_summary;
+DROP VIEW IF EXISTS top_rated_movies;
+
+
 PRAGMA foreign_keys = ON;
+
+
+
 
 -- Table: language
 
@@ -69,7 +88,8 @@ CREATE TABLE user (
 
 CREATE TABLE person (
     person_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(255) UNIQUE NOT NULL
+    name VARCHAR(255) UNIQUE NOT NULL,
+    gender VARCHAR(6) CHECK (gender IN ('Male', 'Female'))
     -- Additional person information can be added here if needed
 );
 

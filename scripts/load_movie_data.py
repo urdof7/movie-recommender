@@ -121,18 +121,67 @@ def load_persons(conn, person_names):
 def load_original_persons(conn, persons_csv_url):
     """
     Insert cast members into the person table from the original dataset.
+    Also insert into movie_cast table.
     """
     cur = conn.cursor()
     response = requests.get(persons_csv_url)
     response.raise_for_status()
     f = io.StringIO(response.text)
     reader = csv.DictReader(f)
-    person_names = set()
+
     for row in reader:
+        movie_id_str = row.get('MovieID', '').strip()
+        cast_id = row.get('CastID', '').strip()
         name = row.get('Name', '').strip()
-        if name:
-            person_names.add(name)
-    load_persons(conn, person_names)
+        gender_code = row.get('Gender', '').strip()
+        character_name = row.get('Character', '').strip()
+
+        if not name or not movie_id_str.isdigit():
+            continue  # Skip invalid entries
+
+        movie_id = int(movie_id_str)
+
+        # Map gender code to 'Male' or 'Female'
+        if gender_code == '1':
+            gender = 'Female'
+        elif gender_code == '2':
+            gender = 'Male'
+        else:
+            gender = None  # Could be empty or unknown
+
+        # Insert or update person
+        # Use UPSERT to insert or update gender if necessary
+        insert_person_query = """
+        INSERT INTO person (name, gender)
+        VALUES (?, ?)
+        ON CONFLICT(name) DO UPDATE SET gender = excluded.gender
+        WHERE person.gender IS NULL OR person.gender = '';
+        """
+
+        cur.execute(insert_person_query, (name, gender))
+
+        # Get person_id
+        cur.execute("SELECT person_id FROM person WHERE name = ?", (name,))
+        person_id_row = cur.fetchone()
+        if person_id_row:
+            person_id = person_id_row[0]
+        else:
+            continue  # Should not happen
+
+        # Insert into movie_cast
+        # character_name can be None
+        insert_movie_cast_query = """
+        INSERT OR IGNORE INTO movie_cast (movie_id, person_id, character_name)
+        VALUES (?, ?, ?);
+        """
+
+        try:
+            cur.execute(insert_movie_cast_query, (movie_id, person_id, character_name))
+        except sqlite3.IntegrityError as e:
+            print(f"Skipping movie_cast insertion due to foreign key constraint: {e}")
+            continue
+
+    conn.commit()
 
 def load_movies(conn, movies_csv_url):
     """
@@ -519,7 +568,12 @@ def load_ratings(conn, ratings_csv_url):
         # Insert user
         cur.execute(insert_user_query, (user_id,))
         # Insert rating
-        cur.execute(insert_rating_query, (user_id, movie_id, rating, rating_date))
+        try:
+            cur.execute(insert_rating_query, (user_id, movie_id, rating, rating_date))
+        except sqlite3.IntegrityError as e:
+            print(f"Skipping rating insertion due to foreign key constraint: {e}")
+            continue
+
     conn.commit()
 
 def main():
@@ -538,10 +592,10 @@ def main():
         ratings_csv_url = 'https://raw.githubusercontent.com/tugraz-isds/datasets/master/movies/Ratings.csv'
 
         # Load data from the original dataset
-        print("Loading persons data from original dataset...")
-        load_original_persons(conn, persons_csv_url)
         print("Loading movies data from original dataset...")
         load_movies(conn, movies_csv_url)
+        print("Loading persons data from original dataset...")
+        load_original_persons(conn, persons_csv_url)
         print("Loading ratings data from original dataset...")
         load_ratings(conn, ratings_csv_url)
 
