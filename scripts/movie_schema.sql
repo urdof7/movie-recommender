@@ -166,3 +166,74 @@ CREATE TABLE rating (
     FOREIGN KEY (user_id) REFERENCES user(user_id),
     FOREIGN KEY (movie_id) REFERENCES movie(movie_id)
 );
+
+-- Indexes for Optimizing Joins and Query Performance
+-- These indexes are chosen to improve the efficiency of joins across the schema, especially for tables
+-- involved in foreign key relationships and many-to-many associations. They target the most common
+-- query patterns such as filtering, sorting, and joining, ensuring minimal full table scans and faster
+-- data retrieval.
+-- Index for fast searching of movies by title
+CREATE INDEX idx_movie_title ON movie (original_title);
+
+-- Index for optimizing queries by user in the rating table
+CREATE INDEX idx_rating_user ON rating (user_id);
+
+-- Index for optimizing queries by movie in the rating table
+CREATE INDEX idx_rating_movie ON rating (movie_id);
+
+-- Index for improving performance of genre-based queries
+CREATE INDEX idx_movie_genre ON movie_genre (genre_id);
+
+-- Index for linking movies to directors efficiently
+CREATE INDEX idx_movie_director ON movie_director (director_id);
+
+-- Index for filtering or sorting movies by release date
+CREATE INDEX idx_movie_release_date ON movie (release_date);
+
+-- Index for looking up cast members by name
+CREATE INDEX idx_person_name ON person (name);
+
+-- Index for filtering movies by original language
+CREATE INDEX idx_movie_language ON movie (original_language_code);
+
+
+
+-- View: Movies and their associated genres
+CREATE VIEW movies_and_genres AS
+SELECT 
+    m.movie_id,
+    m.original_title AS movie_title,
+    g.genre_name AS genre
+FROM 
+    movie m
+JOIN 
+    movie_genre mg ON m.movie_id = mg.movie_id
+JOIN 
+    genre g ON mg.genre_id = g.genre_id;
+
+-- View: User activity summary (total ratings and average rating)
+CREATE VIEW user_activity_summary AS
+SELECT 
+    u.user_id,
+    COUNT(r.movie_id) AS total_ratings,
+    AVG(r.rating) AS average_rating
+FROM 
+    user u
+JOIN 
+    rating r ON u.user_id = r.user_id
+GROUP BY 
+    u.user_id;
+
+-- View: Top-rated movies with high IMDB ratings
+CREATE VIEW top_rated_movies AS
+SELECT 
+    movie_id,
+    original_title AS movie_title,
+    imdb_rating,
+    release_date
+FROM 
+    movie
+WHERE 
+    imdb_rating >= 8.0
+ORDER BY 
+    imdb_rating DESC;
