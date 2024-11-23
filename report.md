@@ -42,6 +42,8 @@ FROM
 JOIN 
     users_without_high_ratings ON 1=1;
 
+'''
+
 ## Observations on Filtering Methods
 
 ### Content-Based Filtering
