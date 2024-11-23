@@ -41,3 +41,34 @@ FROM
     total_users
 JOIN 
     users_without_high_ratings ON 1=1;
+
+## Observations on Filtering Methods
+
+### Content-Based Filtering
+
+- **Pros**:
+  - Highly interpretable: Recommendations are derived from explicit movie features like genres, directors, and cast.
+  - Effective for users with well-defined preferences (i.e., those who have rated movies highly).
+
+- **Cons**:
+  - **Applicability Gap**: Fails for users without highly rated movies (approximately 18% of users in the dataset).
+  - **Limited Diversity**: Recommendations are often confined to movies similar to those the user has already rated, potentially reducing novelty.
+
+### Collaborative Filtering
+
+- **Pros**:
+  - Captures latent patterns in user preferences, enabling diverse and broader recommendations.
+  - Does not rely on explicit feature data, making it universally applicable for all users, regardless of their individual high-rating history.
+
+- **Cons**:
+  - Requires substantial user-item interaction data for accuracy.
+  - Less effective in handling new users or items with sparse ratings.
+
+---
+
+## Conclusion
+
+Content-based filtering, while transparent and interpretable, is limited by its inability to serve users without high ratings. Collaborative filtering, on the other hand, offers broader applicability and greater diversity in recommendations, making it more suitable for datasets with mixed user engagement.
+
+Given that approximately **18% of users** are not served by content-based filtering under the current threshold (we could lower the 4.0 threshold but it wouldnt make sense to recomment movies based on similarity to a movie the user rated low), it may be worth considering a hybrid approach. Such a system could leverage collaborative filtering for users without high ratings and content-based filtering for users with clear preference profiles.
+
